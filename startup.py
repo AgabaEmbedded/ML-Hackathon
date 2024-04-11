@@ -206,11 +206,13 @@ def Home_Page():
         dates(last_funding_at, 'last_funding_at')
         
         
-
+        test_df = pd.DataFrame(test, index = ['values'])
+        test_df['funding_total_usd'] = pd.to_numeric(test_df['funding_total_usd'], errors='coerce')
+        test_df['avg_participants'] = pd.to_numeric(test_df['avg_participants'], errors='coerce')
         with open('model', 'rb') as f:
             model = pickle.load(f)
         if number_of_uknown <=8:
-            prediction = model.predict(pd.DataFrame(test, index = ['values']))
+            prediction = model.predict(test_df)
             if prediction == 1:
                 st.write(
                 """
@@ -269,7 +271,7 @@ def Home_Page():
     st.write('## Enter Features and get Predictions')
     st.write("  \n")
 
-    col1, col2, col3= st.columns(3)
+    col1, col2= st.columns(2)
     with col1:
         state_code = st.selectbox("select state code of the location", state_codes,)
         latitude = st.number_input("Enter the Latitude",)
@@ -280,17 +282,21 @@ def Home_Page():
         first_funding_at = st.date_input('date of first funding')
         last_funding_at = st.date_input('date of last funding')
         
-    with col3:
+    with col2:
         first_milestone_at = st.date_input('date of first milestone')
         last_milestone_at = st.date_input('date of last milestone')
         relationships = st.number_input('enter the numbers of relationships', 0, 100 )
         funding_rounds = st.slider('select the number of funding rounds', 0, 10)
         funding_total_usd = st.text_input('enter the total funding amount')
         milestones = st.slider('enter the number of milestones', 0, 10)
-        avg_participants = st.text_input('enter the number of employees')
+        avg_participants = st.text_input('enter the number of participant in funding rounds')
         is_top_500 = st.radio('is startup among top 500?', ['yes', 'no', 'do not know'])
+    
+    st.write(" ")
+    st.write(" ")
+    st.write(" ") 
         
-        predict = st.button('Predict', use_container_width=True, help ='click here to get prediction')
+    predict = st.button('Predict', use_container_width=True, help ='click here to get prediction')
     
     
 
