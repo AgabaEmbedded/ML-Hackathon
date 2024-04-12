@@ -179,7 +179,7 @@ def Home_Page():
     def categorical(column, column_str):
 
         if column == 'others':
-            test[column_str] = le.fit_transform(df[column_str]).mode()[0]
+            test[column_str] = le.fit(df[column_str]).transform([df[column_str].mode()[0]])[0]
             number_of_unknown+=1
         else:
             test[column_str] = (le.fit(df[column_str]).transform([column]))[0]
