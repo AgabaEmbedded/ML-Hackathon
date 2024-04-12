@@ -387,7 +387,7 @@ def About_project():
     with col5:
         st.write("")
         st.link_button(label="View Dataset",url="https://www.kaggle.com/datasets/manishkc06/startup-success-prediction",use_container_width=True)
-    with col4:
+    with col6:
         st.write("")
         st.link_button(label="Notebook",url="https://www.kaggle.com/code/sundayabraham/startups-success-prediction",use_container_width=True)
         st.write("")
