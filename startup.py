@@ -329,9 +329,9 @@ def Home_Page():
         last_milestone_at = st.date_input('date of last milestone', min_value= datetime(1980, 1, 1))
         relationships = st.number_input('enter the numbers of relationships', 0, 100 )
         funding_rounds = st.slider('select the number of funding rounds', 0, 10)
-        funding_total_usd = st.text_input('enter the total funding amount')
+        funding_total_usd = st.text_input('enter the total funding amount in usd')
         milestones = st.slider('enter the number of milestones', 0, 10)
-        avg_participants = st.text_input('enter the number of participant in funding rounds')
+        avg_participants = st.text_input('enter the average number of participant per funding rounds')
         is_top_500 = st.radio('is startup among top 500?', ['yes', 'no', "don't know"])
     
 
@@ -380,10 +380,17 @@ def About_project():
 
     st.markdown("<div style='background-color:#CACFD2; padding:10px; border-radius:15px; text-align:left;'>This dataset is related to startups, it was scraped from Crunchbase. It contains information about startup locations, founding details, funding rounds, categories, and their success status. It could be a valuable resource for analyzing factors influencing startup success.'</div>",unsafe_allow_html=True)
     col4, col5, col6 = st.columns(3)
+    with col4:
+        st.write("")
+        st.link_button(label="Github repo",url="https://github.com/AgabaEmbedded/ML-Hackathon",use_container_width=True)
+        st.write("")
     with col5:
         st.write("")
         st.link_button(label="View Dataset",url="https://www.kaggle.com/datasets/manishkc06/startup-success-prediction",use_container_width=True)
-        
+    with col4:
+        st.write("")
+        st.link_button(label="Notebook",url="https://www.kaggle.com/code/sundayabraham/startups-success-prediction",use_container_width=True)
+        st.write("")
         
     st.write("")
 
