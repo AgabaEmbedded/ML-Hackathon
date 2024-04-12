@@ -11,7 +11,7 @@ import pickle
 
 
 #setting the page title/configuration
-st.set_page_config(page_title="Startup Success Prediction",page_icon="🚀",layout="centered")
+st.set_page_config(page_title="Startups Success Prediction",page_icon="🚀",layout="centered")
 
 
 #Assigning the available classes for categorical variable(city,p state_code, zip_code) gotten from the dataset. Added others for users who don't have this details
@@ -146,7 +146,7 @@ def Home_Page():
     st.write(
                     """
                     <div style="background-color: #4682B4; border-radius: 20px; padding: 5px; color: white; font-weight: bold; text-align: center; font-size: 46px;">
-                        Statup Success Prediction
+                        Startups Success Prediction
                     </div>
                     """,
                     unsafe_allow_html=True
