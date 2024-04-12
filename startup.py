@@ -276,7 +276,7 @@ def Home_Page():
             
             st.write('probability of success: ', prediction[0,1], 'probability of failure: ', prediction[0,0])
             
-            st.write(model.predict(test_df))
+            
             if prediction[0,0]<prediction[0,1]:
                 st.write(
                 """
