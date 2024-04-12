@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
 import pickle
-number_of_unknown = 0
+
 
 #setting the page title/configuration
 st.set_page_config(page_title="Startup Success Prediction",page_icon="🚀",layout="centered")
@@ -135,7 +135,7 @@ categories = ['music', 'enterprise', 'web', 'software', 'games_video',
        'hospitality', 'news', 'transportation', 'sports', 'real_estate',
        'health', 'others']
 
-
+count = 1
 
 
 #creating a method to represent the first page i.e Home Page
@@ -180,7 +180,8 @@ def Home_Page():
 
         if column == 'others':
             test[column_str] = le.fit(df[column_str]).transform([df[column_str].mode()[0]])[0]
-            number_of_unknown+=1
+            global count 
+            count+=1
         else:
             test[column_str] = (le.fit(df[column_str]).transform([column]))[0]
 
@@ -188,7 +189,8 @@ def Home_Page():
     def continous(column, column_str):
         if column is None:
             test[column_str] = df[column_str].mean()
-            number_of_unknown+=1
+            global count
+            count+=1
         else:
             test[column_str] = column
 
@@ -203,7 +205,8 @@ def Home_Page():
     def binary(column, column_str):
         if column=="don't know":
             test[column_str] = 0
-            number_of_unknown+=1
+            global count
+            count+=1
         elif column == 'yes':
             test[column_str] = 1
         else:
@@ -218,11 +221,11 @@ def Home_Page():
 
     #this method assumes the user didn't enter date if the returned date is today's date
     #if the user did not enter a date, the method sets the most common year, day and month in that date column as the date
-    def set_unknown_dates(column, column_str, number = number_of_unknown):
+    def set_unknown_dates(column, column_str):
         if column == datetime.today().date():
             column = column.replace(year = df[column_str+'_year'].mode()[0], day = df[column_str+'_day'].mode()[0], month = df[column_str+'_month'].mode()[0] )
-            number +=1
-            number_of_unknown = number
+            global count
+            count+=1
 
     
 
@@ -266,12 +269,13 @@ def Home_Page():
             model = pickle.load(f)
 
         #making prediction and printing output only if the number of unknown from user is less than or equal to 8
-        if number_of_unknown <=8:
+        if count <=8:
             prediction = model.predict_proba(test_df)
             
                    
             
             st.write('probability of success: ', prediction[0,0], 'probability of failure: ', prediction[0,1])
+            st.write(count)
 
             if prediction[0,0]<prediction[0,1]:
                 st.write(
