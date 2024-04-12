@@ -380,7 +380,8 @@ def About_project():
     col4, col5, col6 = st.columns(3)
     with col5:
         st.write("")
-        if st.button('**see dataset**', use_container_width=True):
+        dataset = st.button('**see dataset**', use_container_width=True)
+        if dataset:
             webbrowser.open_new_tab('https://www.kaggle.com/datasets/manishkc06/startup-success-prediction')
     st.write("")
 
