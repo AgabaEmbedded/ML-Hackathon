@@ -386,6 +386,8 @@ def About_project():
     #Detail description of dataset
     st.markdown("<div style='background-color:#EC7063; padding:10px; border-radius:25px; text-align:center;'><b>Detailed Description of Dataset</b></div>",unsafe_allow_html=True)
 
+    st.markdown("")
+
     with st.expander('View Details'):
 
         st.write("# description of each Column")
