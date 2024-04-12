@@ -378,7 +378,9 @@ def About_project():
 
     st.write("")
 
+    
     st.markdown("<div style='background-color:#CACFD2; padding:10px; border-radius:15px; text-align:left;'>This dataset is related to startups, it was scraped from Crunchbase. It contains information about startup locations, founding details, funding rounds, categories, and their success status. It could be a valuable resource for analyzing factors influencing startup success.'</div>",unsafe_allow_html=True)
+    st.write("")
     col4, col5, col6 = st.columns(3)
     with col4:
         st.write("")
