@@ -275,7 +275,7 @@ def Home_Page():
                    
             
             st.write('probability of success: ', prediction[0,0], 'probability of failure: ', prediction[0,1])
-            st.write(count)
+            
 
             if prediction[0,0]<prediction[0,1]:
                 st.write(
