@@ -1,16 +1,22 @@
+#importing libraries needed
 import streamlit as st
 import xgboost
 import time
 import sklearn
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
 import pickle
-#from sklearn.ensemble import _gb_losses
+import webbrowser
+number_of_unknown = 0
+
+#setting the page title/configuration
 st.set_page_config(page_title="Startup Success Prediction",page_icon="🚀",layout="centered")
 
 
-
+#Assigning the available classes for categorical variable(city,p state_code, zip_code) gotten from the dataset. Added others for users who don't have this details
 cities = ['San Diego', 'Los Gatos', 'Cupertino', 'San Francisco',
        'Mountain View', 'San Rafael', 'Williamstown', 'Palo Alto',
        'Menlo Park', 'Louisville', 'Brooklyn', 'Denver', 'Vienna',
@@ -122,60 +128,104 @@ zip_codes = ['92101', '95032', '92121', '95014', '94105', '94043', '94041',
        '95066', '81620', '97224', '94301-1705', '72201', '60188', '77046',
        '94410', '77027', '53562', '98021', 'others']
 
+categories = ['music', 'enterprise', 'web', 'software', 'games_video',
+       'network_hosting', 'finance', 'mobile', 'education',
+       'public_relations', 'security', 'other', 'photo_video', 'hardware',
+       'ecommerce', 'advertising', 'travel', 'fashion', 'analytics',
+       'consulting', 'biotech', 'cleantech', 'search', 'semiconductor',
+       'social', 'medical', 'automotive', 'messaging', 'manufacturing',
+       'hospitality', 'news', 'transportation', 'sports', 'real_estate',
+       'health', 'others']
 
 
+
+
+#creating a method to represent the first page i.e Home Page
 def Home_Page():
 
-    #preprocessing data from user to be accepted by the model for prediction. this will ivolve label encoding and other processes
+    
+    #placing the heading 'Startup Success Prediction' using css
+    st.write(
+                    """
+                    <div style="background-color: #4682B4; border-radius: 20px; padding: 5px; color: white; font-weight: bold; text-align: center; font-size: 46px;">
+                        Statup Success Prediction
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                    )
+    #creating interface of home page
+    st.write("\n")
+    st.write("## VC being skeptical about a statup?")
+    st.write("")
+    st.write('Check the probability of success here!  \n*This system predict the probabilty of success with just a little information*' )
+    st.image('How-to-Measure-Startup-Success-Main.jpg')
+    st.write("  \n")
+    st.write('## Enter Features and get Predictions')
+    st.write("  \n")
+
+    
+    #importing cleaned dataset exported from machine notebook for encoding and preprocessing user input
     df = pd.read_csv('startup.csv')
-    le = LabelEncoder()
+
+     #creating object for label encoder
+    le = LabelEncoder()    
 
 
-
+    #creating empty dictionary to store user input
     test = {}
 
     
-    #preprocessing state_code, using the label encoder from the original dataset to transform it and using the most common value if user has no input
+    #method created to preprocess categorical inputs by encoding and storing to created dictionary
+    #this methode insert the model value (most common category) if user click 'others'
+    #this method increament a variable called number of unknown if the user enters 'others' to track the unknown entries
     def categorical(column, column_str):
 
-        if column == 'others' or column is None:
-            test[column_str] = (le.fit_transform(df[column_str]).unique()) + 1
-            number_of_uknown+=1
+        if column == 'others':
+            test[column_str] = le.fit_transform(df[column_str]).mode()
+            number_of_unknown+=1
         else:
-            test[column_str] = le.fit(df[column_str]).transform([column])
+            test[column_str] = (le.fit(df[column_str]).transform([column]))[0]
 
+    #this method writes continous entries to the test dictionary and take care of no entry
     def continous(column, column_str):
         if column is None:
             test[column_str] = df[column_str].mean()
-            number_of_uknown+=1
+            number_of_unknown+=1
         else:
             test[column_str] = column
 
-    def dates(column, column_str):
-        if column is None:
-            test[column_str+'year'] = df[column_str+'_year'].mode()
-            test[column_str+'day'] = df[column_str+'_day'].mode()
-            test[column_str+'month'] = df[column_str+'_month'].mode()
-            number_of_uknown+=1
-        else:
-            test[column_str+'_year'] = column.year
-            test[column_str+'_day'] = column.day
-            test[column_str+'_month'] = column.month
-            
 
+    #method to encode date entries and create features for day, month and year
+    def dates(column, column_str):
+        test[column_str+'_year'] = column.year
+        test[column_str+'_day'] = column.day
+        test[column_str+'_month'] = column.month
+            
+    #method to encode binnary column, assumes negative if no entry i.e user entered 'do not know
     def binary(column, column_str):
-        if column=='do not know' or column is None:
+        if column=="don't know":
             test[column_str] = 0
-            number_of_uknown+=1
+            number_of_unknown+=1
         elif column == 'yes':
             test[column_str] = 1
         else:
             test[column_str] = 0
+
+    #method to calculate age using given dates
     def findage(date1, date2, key):
         delta = date2 - date1
         years_difference = delta.days / 365.25
         test[key] = years_difference
 
+
+    #this method assumes the user didn't enter date if the returned date is today's date
+    #if the user did not enter a date, the method sets the most common year, day and month in that date column as the date
+    def set_unknown_dates(column, column_str, number = number_of_unknown):
+        if column == datetime.today().date():
+            column = column.replace(year = df[column_str+'_year'].mode()[0], day = df[column_str+'_day'].mode()[0], month = df[column_str+'_month'].mode()[0] )
+            number +=1
+            number_of_unknown = number
+
     
 
 
@@ -183,9 +233,11 @@ def Home_Page():
 
 
 
-
+    #calling the appropraite function to preprocess user entered data
     def make_prediction():
-        number_of_uknown = 0
+        set_unknown_dates(founded_at, 'founded_at')
+        set_unknown_dates(first_funding_at, 'first_funding_at')
+        set_unknown_dates(last_funding_at, 'last_funding_at')
         categorical(state_code, 'state_code')
         continous(latitude, 'latitude')
         continous(longitude, 'longitude')
@@ -199,25 +251,35 @@ def Home_Page():
         continous(funding_rounds, 'funding_rounds')
         continous(funding_total_usd, 'funding_total_usd')
         continous(milestones, 'milestones')
+        categorical(category_code, 'category_code')
         continous(avg_participants, 'avg_participants')
         binary(is_top_500, 'is_top500')
         dates(founded_at, 'founded_at')
         dates(first_funding_at, 'first_funding_at')
         dates(last_funding_at, 'last_funding_at')
         
-        
+        #converting test to dataframe 
         test_df = pd.DataFrame(test, index = ['values'])
         test_df['funding_total_usd'] = pd.to_numeric(test_df['funding_total_usd'], errors='coerce')
         test_df['avg_participants'] = pd.to_numeric(test_df['avg_participants'], errors='coerce')
+
+        #importing model
         with open('model', 'rb') as f:
             model = pickle.load(f)
-        if number_of_uknown <=8:
-            prediction = model.predict(test_df)
-            if prediction == 1:
+
+        #making prediction and printing output only if the number of unknown from user is less than or equal to 8
+        if number_of_unknown <=8:
+            prediction = model.predict_proba(test_df)
+            
+                   
+            
+            st.write('probability of success: ', prediction[0,0], 'probability of failure: ', prediction[0,1])
+
+            if prediction[0,0]<prediction[0,1]:
                 st.write(
                 """
                 <div style="background-color: #EOFFFF; border-radius: 10px; padding: 5px; color: blue; font-weight: bold; text-align: center; font-size: 16px;">
-                    company will succeed
+                    Statup will succeed
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -226,7 +288,7 @@ def Home_Page():
                 st.write(
                 """
                 <div style="background-color: #EOFFFF; border-radius: 0px; padding: 5px; color: red; font-weight: bold; text-align: center; font-size: 16px;">
-                    company will fail
+                    Startup will fail
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -235,7 +297,7 @@ def Home_Page():
             st.write(
                 """
                 <div style="background-color: #EOFFFF; border-radius: 0px; padding: 5px; color: red; font-weight: italize; text-align: center; font-size: 16px;">
-                    error entor more features
+                    error! enter more features
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -245,71 +307,51 @@ def Home_Page():
 
 
 
-
-
-
-
-    st.write(
-        """
-        <div style="background-color: #4682B4; border-radius: 10px; padding: 5px; color: white; font-weight: bold; text-align: center; font-size: 46px;">
-            Startups Success Prediction
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-    st.write("\n")
-    st.write("## VC being skeptical about a statup?")
-    st.write("")
-    st.write('Check the probability of success here!  \n*This system predict the probabilty of success with just a little information*' )
-
-    st.image('How-to-Measure-Startup-Success-Main.jpg')
-
-
-    st.write("  \n")
-    st.write('## Enter Features and get Predictions')
-    st.write("  \n")
-
+    #divide the column into 3
     col1, col2= st.columns(2)
+
+    #getting input from user from column 1 and column 2
     with col1:
         state_code = st.selectbox("select state code of the location", state_codes,)
         latitude = st.number_input("Enter the Latitude",)
         longitude = st.number_input("Enter the Longitude")
         zip_code = st.selectbox('enter the zip code', zip_codes)
         city = st.selectbox('select the city where the startup is located', cities)
-        founded_at = st.date_input('founding date')
-        first_funding_at = st.date_input('date of first funding')
-        last_funding_at = st.date_input('date of last funding')
-        
+        category_code = st.selectbox('select the category of the startup', categories)
+        founded_at = st.date_input('founding date', min_value= datetime(1980, 1, 1))
+        first_funding_at = st.date_input('date of first funding', min_value= datetime(1980, 1, 1))
+        last_funding_at = st.date_input('date of last funding', min_value= datetime(1980, 1, 1))
+                
     with col2:
-        first_milestone_at = st.date_input('date of first milestone')
-        last_milestone_at = st.date_input('date of last milestone')
+        first_milestone_at = st.date_input('date of first milestone', min_value= datetime(1980, 1, 1))
+        last_milestone_at = st.date_input('date of last milestone', min_value= datetime(1980, 1, 1))
         relationships = st.number_input('enter the numbers of relationships', 0, 100 )
         funding_rounds = st.slider('select the number of funding rounds', 0, 10)
         funding_total_usd = st.text_input('enter the total funding amount')
         milestones = st.slider('enter the number of milestones', 0, 10)
         avg_participants = st.text_input('enter the number of participant in funding rounds')
-        is_top_500 = st.radio('is startup among top 500?', ['yes', 'no', 'do not know'])
+        is_top_500 = st.radio('is startup among top 500?', ['yes', 'no', "don't know"])
     
+
     st.write(" ")
     st.write(" ")
     st.write(" ") 
-        
+    
+    #placing predict button
     predict = st.button('Predict', use_container_width=True, help ='click here to get prediction')
     
     
-
+    #if predict button is clicked show progress bar for 5 minute and call make_prediction() method to make prediction
     if predict:
         bar = st.progress(0)
         for i in range(5):
             bar.progress((i+1)*20)
             time.sleep(1)
         make_prediction()
-       
+#method for about project page     
 def About_project():
     #Title
-    st.markdown("<h1 style='text-align:center;'>Spaceship Titanic Classification</h1>",unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align:center;'>Startup Success Prediction</h1>",unsafe_allow_html=True)
 
     #Problem Statement Section
     st.markdown("<div style='background-color:#EC7063; padding:10px; border-radius:25px; text-align:center;'><b>Problem Description</b></div>",unsafe_allow_html=True)
@@ -320,6 +362,15 @@ def About_project():
 
     st.write("")
     
+    #How to use Application
+    st.markdown("<div style='background-color:#EC7063; padding:10px; border-radius:25px; text-align:center;'><b>How to use Application</b></div>",unsafe_allow_html=True)
+
+    st.write("")
+
+    st.markdown("<div style='background-color:#CACFD2; padding:10px; border-radius:15px; text-align:left;'>'This application gives accurate prediction of the probability of a startup succeeding versus failing. The model was train on a publicly available dataset gotten from kaggle. this was a labeled crunch base data and the model achieved an accuracy of 81%.  \nTo use this application provide the requested features for the startup. The model will produce an output if user can provide more than half of the amount of features needed i.e 9 and above. Provided user can't make available this required amount of features then the application concludes user don't have enough information to make prediction on the startup. Note: providing an incomplete feature set for prediction reduces the performance of the application i.e reduces the accuracy.  \nClicking on predict starts the model to make prediction on the data make available. it advicable to provide complete data for accurate prediction.'</div>",unsafe_allow_html=True)
+    
+    st.write("")
+
     #Dataset Description Section
     st.markdown("<div style='background-color:#EC7063; padding:10px; border-radius:25px; text-align:center;'><b>Dataset Description</b></div>",unsafe_allow_html=True)
 
@@ -327,52 +378,60 @@ def About_project():
 
     st.markdown("<div style='background-color:#CACFD2; padding:10px; border-radius:15px; text-align:left;'>This dataset is related to startups, it was scraped from Crunchbase. It contains information about startup locations, founding details, funding rounds, categories, and their success status. It could be a valuable resource for analyzing factors influencing startup success.'</div>",unsafe_allow_html=True)
     
+    if st.button('see dataset'):
+        webbrowser.open_new_tab('https://www.kaggle.com/datasets/manishkc06/startup-success-prediction')
     st.write("")
 
-    st.write("# description of each Column")
-    st.markdown('**Unnamed: 0:** This column name often appears in datasets due to the way they are exported or created. It does not contain meaningful data and was dropped during data cleaning.')
-    st.markdown('\n**state_code:** Two-letter code representing the state where the startup is located (e.g., CA for California, NY for New York).')
-    st.markdown('**latitude, longitude:** Geographical coordinates of the location of the startup.')
-    st.markdown('**zip_code:** Postal code of the location of the startup.')
-    st.markdown('**id:** Unique identifier for each startup in the dataset.')
-    st.markdown('**city:** Name of the city where the startup is located.')
-    st.markdown('**Unnamed: 6:** Similar to "Unnamed: 0," this does not hold valuable data and was dropped.')
-    st.markdown('**name:** Name of the startup.')
-    st.markdown('**labels:** Labels or tags associated with the startup this is a duplicate of the target class.')
-    st.markdown('**founded_at:** Date or year when the startup was founded.')
-    st.markdown('**closed_at:** Date or year when the startup ceased operations (if applicable).')
-    st.markdown("**first_funding_at:** Date or year of the startup's first funding round (if applicable).")
-    st.markdown("**last_funding_at:** Date or year of the startup's most recent funding round (if applicable).")
-    st.markdown('**age_first_funding_year:** Calculated age of the startup when it received its first funding (years since founding).')
-    st.markdown('**age_last_funding_year:** Calculated age of the startup at its most recent funding (years since founding).')
-    st.markdown('**age_first_milestone_year:** time elapsed between founding and achieving a significant milestone.')
-    st.markdown('**age_last_milestone_year:** the time elapsed until the most recent milestone.')
-    st.markdown("**relationships:** details about the startup's connections to other entities (investors, partners, etc.).")
-    st.markdown('**funding_rounds:** Total number of funding rounds the startup has received.')
-    st.markdown('**funding_total_usd:** Total amount of funding raised by the startup in USD (across all rounds).')
-    st.markdown('**milestones:** List of milestones achieved by the startup.')
-    st.markdown('**state_code.1 (duplicate?):** This is a duplicate of the original "state_code" column and was be dropped.')
-    st.markdown("**is_CA, is_NY, is_MA, is_TX, is_otherstate:** Binary indicators for specific states (e.g., California, New York, Massachusetts, Texas, Other).")
-    st.markdown("**category_code:** Code representing the startup's industry category (e.g., software, healthcare).")
-    st.markdown("**is_software, is_web, is_mobile, is_enterprise, is_advertising, is_gamesvideo, is_ecommerce, is_biotech, is_consulting, is_othercategory:** Binary indicators for specific categories or industry sectors.")
-    st.markdown('**object_id: Identifier for the startup (similar to id column).')
-    st.markdown('**has_VC, has_angel to has_roundD:** Likely binary indicators signifying whether the startup received funding from specific sources (VC = Venture Capital, Angel Investors, funding rounds A-D).')
-    st.markdown("**avg_participants:** Average number of participants (investors) in the startup's funding rounds.")
-    st.markdown("**is_top500:** Binary indicator if the startup is among the top 500 companies")
-    st.markdown('**status:** Status of the startup (e.g., closed, acquired) where acquired indicate both acquired or operating. this is the target class')
+    #Detail description of dataset
+    st.markdown("<div style='background-color:#EC7063; padding:10px; border-radius:25px; text-align:center;'><b>Detailed Description of Dataset</b></div>",unsafe_allow_html=True)
+
+    with st.expander('View Details'):
+
+        st.write("# description of each Column")
+        st.markdown('**Unnamed: 0:** This column name often appears in datasets due to the way they are exported or created. It does not contain meaningful data and was dropped during data cleaning.')
+        st.markdown('\n**state_code:** Two-letter code representing the state where the startup is located (e.g., CA for California, NY for New York).')
+        st.markdown('**latitude, longitude:** Geographical coordinates of the location of the startup.')
+        st.markdown('**zip_code:** Postal code of the location of the startup.')
+        st.markdown('**id:** Unique identifier for each startup in the dataset.')
+        st.markdown('**city:** Name of the city where the startup is located.')
+        st.markdown('**Unnamed: 6:** Similar to "Unnamed: 0," this does not hold valuable data and was dropped.')
+        st.markdown('**name:** Name of the startup.')
+        st.markdown('**labels:** Labels or tags associated with the startup this is a duplicate of the target class.')
+        st.markdown('**founded_at:** Date or year when the startup was founded.')
+        st.markdown('**closed_at:** Date or year when the startup ceased operations (if applicable).')
+        st.markdown("**first_funding_at:** Date or year of the startup's first funding round (if applicable).")
+        st.markdown("**last_funding_at:** Date or year of the startup's most recent funding round (if applicable).")
+        st.markdown('**age_first_funding_year:** Calculated age of the startup when it received its first funding (years since founding).')
+        st.markdown('**age_last_funding_year:** Calculated age of the startup at its most recent funding (years since founding).')
+        st.markdown('**age_first_milestone_year:** time elapsed between founding and achieving a significant milestone.')
+        st.markdown('**age_last_milestone_year:** the time elapsed until the most recent milestone.')
+        st.markdown("**relationships:** details about the startup's connections to other entities (investors, partners, etc.).")
+        st.markdown('**funding_rounds:** Total number of funding rounds the startup has received.')
+        st.markdown('**funding_total_usd:** Total amount of funding raised by the startup in USD (across all rounds).')
+        st.markdown('**milestones:** List of milestones achieved by the startup.')
+        st.markdown('**state_code.1 (duplicate?):** This is a duplicate of the original "state_code" column and was be dropped.')
+        st.markdown("**is_CA, is_NY, is_MA, is_TX, is_otherstate:** Binary indicators for specific states (e.g., California, New York, Massachusetts, Texas, Other).")
+        st.markdown("**category_code:** Code representing the startup's industry category (e.g., software, healthcare).")
+        st.markdown("**is_software, is_web, is_mobile, is_enterprise, is_advertising, is_gamesvideo, is_ecommerce, is_biotech, is_consulting, is_othercategory:** Binary indicators for specific categories or industry sectors.")
+        st.markdown('**object_id: Identifier for the startup (similar to id column).')
+        st.markdown('**has_VC, has_angel to has_roundD:** Likely binary indicators signifying whether the startup received funding from specific sources (VC = Venture Capital, Angel Investors, funding rounds A-D).')
+        st.markdown("**avg_participants:** Average number of participants (investors) in the startup's funding rounds.")
+        st.markdown("**is_top500:** Binary indicator if the startup is among the top 500 companies")
+        st.markdown('**status:** Status of the startup (e.g., closed, acquired) where acquired indicate both acquired or operating. this is the target class')
     
 
 
-
-
+#creat sidebar for pages navigation
 st.sidebar.markdown("<h1 style='text-align:center;'>Hi 👋, Welcome to Start Ups all in one App</h1>",unsafe_allow_html=True)    
 
+#place sidebar logo
 st.sidebar.image("logo.png",caption="Startup Success Prediction",use_column_width=True)
 
 st.sidebar.markdown("<div style='text-align:center; font-size:x-large;'><b>Select any Page</b></div>",unsafe_allow_html=True) 
 
 pages = st.sidebar.selectbox(label="",options=["Home Page","About Project"],index=0)
 
+#pages navigation
 if pages == "Home Page":
     Home_Page()
 else:
