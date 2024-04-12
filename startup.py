@@ -377,9 +377,11 @@ def About_project():
     st.write("")
 
     st.markdown("<div style='background-color:#CACFD2; padding:10px; border-radius:15px; text-align:left;'>This dataset is related to startups, it was scraped from Crunchbase. It contains information about startup locations, founding details, funding rounds, categories, and their success status. It could be a valuable resource for analyzing factors influencing startup success.'</div>",unsafe_allow_html=True)
-    
-    if st.button('see dataset'):
-        webbrowser.open_new_tab('https://www.kaggle.com/datasets/manishkc06/startup-success-prediction')
+    col4, col5, col6 = st.columns(3)
+    with col5():
+        st.write("")
+        if st.button('**see dataset**', use_container_width=True):
+            webbrowser.open_new_tab('https://www.kaggle.com/datasets/manishkc06/startup-success-prediction')
     st.write("")
 
     #Detail description of dataset
