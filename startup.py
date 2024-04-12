@@ -7,9 +7,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
 import pickle
-import webbrowser
 number_of_unknown = 0
 
 #setting the page title/configuration
@@ -380,9 +378,9 @@ def About_project():
     col4, col5, col6 = st.columns(3)
     with col5:
         st.write("")
-        dataset = st.button('**see dataset**', use_container_width=True)
-        if dataset:
-            webbrowser.open_new_tab('https://www.kaggle.com/datasets/manishkc06/startup-success-prediction')
+        st.link_button(label="View Dataset",url="https://www.kaggle.com/datasets/manishkc06/startup-success-prediction",use_container_width=True)
+        
+        
     st.write("")
 
     #Detail description of dataset
