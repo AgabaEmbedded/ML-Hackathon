@@ -354,7 +354,7 @@ def Home_Page():
         bar = st.progress(0)
         for i in range(5):
             bar.progress((i+1)*20)
-            time.sleep(1)
+            time.sleep(0.4)
         make_prediction()
 #method for about project page     
 def About_project():
