@@ -272,15 +272,20 @@ def Home_Page():
         if count <=8:
             prediction = model.predict_proba(test_df)
             
-                   
+            if count>1:
+                st.write("")
+                st.write("")
+                st.write('*warning! Inclomplete features give less accurate predictions*')    
+                st.write("")
+                st.write("")  
             
-            st.write('probability of success: ', prediction[0,1], 'probability of failure: ', prediction[0,0])
+            st.write('##### probability of success: ', prediction[0,1], 'probability of failure: ', prediction[0,0])
             
             
             if prediction[0,0]<prediction[0,1]:
                 st.write(
                 """
-                <div style="background-color: #EOFFFF; border-radius: 10px; padding: 5px; color: blue; font-weight: bold; text-align: center; font-size: 16px;">
+                <div style="background-color: #EOFFFF; border-radius: 10px; padding: 5px; color: blue; font-weight: bold; text-align: center; font-size: 20px;">
                     Statup will succeed
                 </div>
                 """,
@@ -289,16 +294,17 @@ def Home_Page():
             else:
                 st.write(
                 """
-                <div style="background-color: #EOFFFF; border-radius: 0px; padding: 5px; color: red; font-weight: bold; text-align: center; font-size: 16px;">
+                <div style="background-color: #EOFFFF; border-radius: 0px; padding: 5px; color: red; font-weight: bold; text-align: center; font-size: 20px;">
                     Startup will fail
                 </div>
                 """,
                 unsafe_allow_html=True
                 )
+            
         else:
             st.write(
                 """
-                <div style="background-color: #EOFFFF; border-radius: 0px; padding: 5px; color: red; font-weight: italize; text-align: center; font-size: 16px;">
+                <div style="background-color: #EOFFFF; border-radius: 0px; padding: 5px; color: red; font-weight: italize; text-align: center; font-size: 20px;">
                     error! enter more features
                 </div>
                 """,
