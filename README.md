@@ -1,12 +1,12 @@
 # Startup Success Prediction 🚀
 
-A **Streamlit web application** that predicts the probability of a startup succeeding or failing using a trained XGBoost machine learning model.
-
 <p align="center">
   <a href="https://startupssuccessprediction.streamlit.app/">
     <img src="Demo.png" width="100" />
   </a>
 </p>
+
+A **Streamlit web application** that predicts the probability of a startup succeeding or failing using a trained XGBoost machine learning model.
 
 This tool helps entrepreneurs, investors, and venture capitalists assess startup potential early by analyzing key features like location, funding history, milestones, industry category, and team relationships.
 
